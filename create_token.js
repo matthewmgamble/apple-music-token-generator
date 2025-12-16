@@ -79,10 +79,11 @@ if(process.argv.length >= 3 && process.env.TEAM_ID && process.env.KEY_ID){
                 privateKey = fs.readFileSync(response.privateKeyFilename);
             } catch (error) {
                 console.error(error);
+                return;
             }
-            payload.iss = response.teamId;
+            payload.iss = response.teamID;
             headers.kid = response.kid;
-            dataReady = true;
+            generateToken();
         })
         .catch(error => {
             console.error(error);
@@ -98,11 +99,12 @@ function writeToFile(fileName, data) {
 
 // JWT are formed formed like:
 // jwt.sign(payload, secretOrPrivateKey, [options, callback])
-if(dataReady) {
+function generateToken() {
     try {
     jwt.sign(payload, privateKey, {header: headers}, async function(error, token) {
         if(error){
             console.error(error);
+            console.log("error!");
             process.exit(1);
         }
 
@@ -141,7 +143,7 @@ if(dataReady) {
             return response.json();
         })
         .then(json => {
-            if(json) { 
+            if(json) {
                 console.log('✅ Test passed');
             } else {
                 console.log('❌ Test failed');
@@ -158,6 +160,9 @@ if(dataReady) {
     } catch(error) {
         console.error(error);
     }
-} else {
-    console.error("😬 The data was not properly processed to create a JWT.");
+}
+
+// Call generateToken if data was loaded synchronously (via env vars/args)
+if(dataReady) {
+    generateToken();
 }
